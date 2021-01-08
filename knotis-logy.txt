@@ -1,0 +1,297 @@
+V tomto týdnu jsem implementoval některá kompresní řešení, která pracují s knihovou liblfif.
+Byl implementován nástroj pro kompresi plenoptického videa, který jej komprimuje jako 5D těleso.
+Dále byl implementován nástroj pro kompresi plenoptickch obrázků, který pracuje s rozdílem vůči prostřednímu pohledu.
+
+Pětirozměrná metoda předběžně dosáhla zajímavých výsledků, metoda pracující s rozdílem nikoliv.
+U obou metod je potřeba provést podrobnější vyhodnocení.
+
+Implementace komprese, která metodou 2D komprimuje prostřední pohled obrázku a následně 4D metodou komprimuje rozdíl všech pohledů vůči tomuto prostřednímu obrázku.
+Dle předběžných výsledků tato metoda dosahuje mírně horšího kompresního výkonu v porovnání s kompresí původního obrázku pouze 4D metodou.
+Tuto kompresi provádí nástroje center_compress a center_decompress.
+
+Testoval a ladil jsem nástroj pro kompresi plenoptického videa jako 5D tělesa na prvních osmi snímcích sekvence Take1_5.
+Dle předběžných výsledků dosáhla 5D komprese až 3x lepšího kompresního poměru při stejné kvalitě (PSNR) v porovnání s kompresí jednotlivých snímků metodou 4D.
+Jak jsem si později všiml, prvních 8 snímků obsahuje pouze statickou scénu, což tyto podezřele pozitivní výsledky pravděpodobně zkresluje.
+Podrobnějšímu testování bych se věnoval následující týden.
+
+Napsal jsem nástroje pro kompresi a dekompresi plenotptického videa jako 5D tělesa, v repozitáři https://github.com/xdlaba02/light-field-image-format je mezi ostatními nástroji jako lfif5d_compress a lfif5d_decompress.
+S nástrojem se pracuje stejně jako s předchozími nástroji, změna je pouze ve vstupní/výstupní masce, která nyní obsahuje i znaky '@' jako zástupce indexů snímků v čase.
+Navíc lze při kompresi zadat parametr '-s n', kde n učuje počet snímků, které budou přeskočeny.
+To se hodí u videí z projektu SAUCE, které na začátku obsahují klapku a střih, protože se střihem uvnitř bloku se komprese neumí vypořádat a pravděpodobně by vedl na neúměrné zhroršení kompresního výkonu.
+
+Pro validaci nástroje a vyhodnocení této komprese by se mi hodily rektifikované varianty některých ze sekvencí z projektu SAUCE, které jsem v adresáři /mnt/matylda1/ibarina/SAUCE/datasets/ nenašel.
+Na osmi snímcích nerektifikované sekvence "smoke" si zatím 5D metoda vede zhruba stejně, jako 4D metoda použitá na jednotlivé snímky.
+Porovnání s existujícíma videometodama použitýma na sekvence jednotlivých pohledů jsem nezkoušel, ale předpokládám, že zejména u nerektifikovaných dat budou 4D i 5D metodu překonávat.
+
+V tomto týdnu jsem implementoval nástroj, který počítá rozdíly mezi pohledy v plenoptickém obrázku v různých směrech tak, jak s nimi pracují kodéry.
+Nástroj umí odhalit, ve kterém směru jsou pohledy nejvíce korelovány. Pomocí tohoto nástroje je možné zvolit vhodný 'směr' aplikace různých kompresních metod na určitý obrázek.
+
+Dále byla zahájena práce na nástrojích pro kompresi plenoptického videa pomocí metod HEVC a XVC, aby mohlo být provedeno srovnání s 5D metodou.
+Tyto nástroje budou komprimovat light field video z různých pohledů.
+
+Metoda 4D byla otestována na obrázku se vzájemně posunutými pohledy a bylo provedeno srovnání s metodou HEVC.
+Posun pohledů vedl na zlepšení v průměru o 3 dB PSNR u 4D metody a naopak na mírné zhoršení pro videometodu HEVC.
+I přesto je pro testovaný obrázek metoda HEVC o něco lepší. Posun pohledů by bylo vhodné vyzkoušet i na jiných obrázcích.
+
+Testování 4D metody JPEG a HEVC na obrázku s posunutými pohledy.
+Ačkoli se průměrně zlepšilo PSNR zhruba o 3 dB, meoda HEVC je pro testovaný obrázek stále o něco vhodnější.
+Určitě by bylo vhodné vyzkoušet to na více obrázcích.
+Taky by na kompresi mohlo mít pozitivní efekt, kdyby rektifikované pohledy neměly černé okraje, ale prázdné místo by bylo nějakým způsobem interpolováno.
+Dále primárně práce na nástrojích pro kompresi plenoptického videa pomocí HEVC a XVC.
+V tomto směru bych do budoucna vytvořil i nástroj pro kompresi plenoptických obrázků a videa pomocí VVC.
+
+Práce na implementaci nástrojů pro kompresi plenoptického videa pomocí kodeků h.265 a xvc různými způsoby.
+
+Modifikace nástroje pro vyhodnocení výkonnosti komprese.
+Tento nástroj nyní počítá i průměrný absolutní rozdíl mezi pohledy, což by pro účely porovnání mělo být více směrodatné, než kvadratický rozdíl.
+Práce na nástroji pro srovnání 5D komprese s metodou HEVC, která bude aplikována buď na všechny pohledy jednoho snímku, nebo všechny snímky jednoho pohledu.
+V rámci toho jsem prováděl konverzi a zpracování videodatasetů.
+
+Implementace nástroje pro rychlý odhad komprese pomocí počítající psnr.
+Nástroj srovnává pohledy obrázku jak v prostorové, tak v úhlové doméně.
+Dále pohledy porovnává v pořadí, ve kterém by mohly být komprimovány.
+Nástroj byl testován na obrázcích, které byly vyhodnoceny v bakalářské práci.
+Nástroj dokáže celkem dobře určit, v jakém směru je vhodné na daný light field aplikovat 2D metodu, 3D metodu nebo videometodu.
+Nástroj toho moc neříká o tom, která metoda bude pro daný light field nejlepší.
+Pokud v tom nějaký vzorec je, nepodařilo se mi ho vyčíst.
+Nástroj se jmenuje lf_psnr, má jeden parametr -i se vstupní maskou.
+
+Studium principu aritmetického kódování v kombinaci s CABAC.
+Experimentování s implmemetací tohoto kódování v knihovně libavcodec.
+Kodér CABAC v knihvoně libavcodec mi přijde nekompletní, jelikož je libavcodec zaměřen spíše na dekódování.
+
+Procházel jsem zdrojové kódy knihovny AIC (Advanced Image Coding), která CABAC implementuje.
+Ač je tato knihovna napsaná v Pascalu, zdrojové kódy jsou poměrně dobře komentované.
+
+Studium publikací a standardů popisujících CABAC v kontextu kodeků H.264 a H.265.
+
+Převážně studium principu CABAC, analýza a experimenty s implementací tohoto kódování v knihovně libavcodec.
+
+Dostudoval jsem potřebnou literaturu a začal s implementací a integrací adaptivního binárního aritmetického kódování do kompresího řetězce namísto neadaptivního Huffmanova kódování.
+Řetězec je aktuálně navržen a částečně implementován, v pátek jsem skončil laděním chyb.
+
+Integrace adaptivního binárního aritmetického kódování do knihovny a ladění.
+
+Začal jsem s implementací CABAC do knihovny.
+Zítra se pokusím napojit adaptivní binární aritmetické kódování do dosavadního kompresního řetězce namísto huffmanova kódování a porovnat kompresní výkon.
+Poté bych se zaměřil na návrh vhodných kontextových modelů.
+
+Dostudoval jsem potřebnou literaturu.
+V následujících dnech začnu s imeplementací.
+Vypadá to, že nebude možné plně využít existující implementaci CABAC, jelikož kontextové modely jsou vždy specifické pro typ dat.
+Na druhou stranu bude alespoň možné využít existující rychlou implementaci binárního aritmetického kódování, přičemž kontextové modely bych navrhl v duchu standardu H.264 tak, aby zohledňovalo redundanci ve čtyřech dimenzích.
+Jelikož budou touto metodou kódovány pouze koeficienty DCT, neměl by to být problém.
+Tímto způsobem nebude problém v budoucnu doplnit další kontextové modely pro jiné typy dat, např. typ predikce.
+
+Studium standardu H.264
+
+Implementoval jsem CABAC do knihovnz liblfif tak, jak jej používá H.264, s rozšířením do 4D.
+Pro 2D metodu to vede na snížení bitrate při stejné kvalitě o několik jednotek procent.
+U 4D metody dochází naopak ke zvýšení bitrate.
+To pravděpodobně znamená, že pro 4D metodu bude potřeba upravit některé konstanty a kontextové modely.
+Dále jsem začal pracovat na modifikaci knihovny, která by měla umožnit dynamickou volbu velikosti bloku.
+
+Pracoval jsem na modifikaci knihovny s důrazem na možnost dynamické volby velikosti bloku.
+Nevím, jestli se to počítá do pracovní doby, jelikož to přímo nesouvisí.
+
+Implementoval jsem kontextové modely CABAC tak, jak je používá metoda H.264, s rozšířením do 4D.
+Podle předběžných testů je pro 4D metodu je výsledný bitrate v řádu jednotek procent větší, než při použití neapadtivního Huffmanova kódování, avšak pro 2D metodu je výsledný bitrate v řádu jednotek procent menší.
+Bude proto pro efektivní kódování nutné upravit i některé číselné konstanty / metody binarizace, které byly experimentálně zjištěny a používány pro kódování koeficientů 2D residua v metodě AVC.
+Zároveň by mohla mít pozitivní vliv také inicializace kontextů na základě vstupní hodnoty kvality / kvantizační matice.
+Aktuálně je použita inicializace všech kontextů na pravděpodobnost .5 pro oba symboly, takže chvíli trvá, než se kontext adaptuje na reálné rozložení.
+
+Také jsem začal s refaktorizací knihovny s důrazem na možnost dynamické volby velikosti bloku.
+To se bude hodit do budoucna při implementaci CTU.
+
+Implementace kontextových modelů odpovídající modelům pro kódování DCT koeficientů residua v h.264.
+
+Zprovoznil a odladil jsem adaptivní binární aritmetické kódování v knihovně liblfif.
+To je v této fázi aplikováno na stejná data, na která bylo použito Huffmanovo kódování.
+Kompresní výkon dosahuje mírně horších výsledků v řádu jednotek procent, avšak rychlost komprese se zvýšila téměř na dvojnásobek.
+To je způsobeno vynecháním jednoho průchodu obrázek navíc, ve kterém byla měřena četnost jednotlivých symbolů.
+Následující dny implementuju kontextové modely, které budou odpovídat modelům pro kódování koeficientů residua v h.264, což by mělo vést na zlepšení kompresního výkonu.
+
+Tento týden jsem zkoušel ruzné kontextové modely a měřil jejich účinnost.
+Implementoval jsem kontextové modely z ITU-T T.81 a zjistil, že jsou méně účinné než kontexty z H.264.
+Poté jsem na základě pozorování navrhl vlastní kontextové modely, které aktuálně dosahují o ~4 % menšího bitrate oproti Huffmanovu kódování.
+
+Navrhl jsem kontexty, které kódují bitovou masku nulový/nenulový koeficient v závislosti na počtu nenulových koeficientů z okolí s menší manhattonskou vzdáleností od DC koeficientu.
+Tento model vede s bloky o velikosti 15^4 na ~4% redukci bitrate oproti Huffmanovu kódování.
+Zkusím do zohledněného okolí přidat i zakódované koeficienty se stejnou manhattonskou vzdáleností od DC koeficientu, což by mělo mít taky vliv.
+
+Zkoumal jsem koeficienty 4D-DCT a hledal jsem redundance, kterých by se dalo využít pro kontextové modelování.
+Experimentoval jsem s kontexty závislými na vzdálenosti od DC koeficientu a podařilo se mi redukovat bitrate o ~14 % oproti CABAC z H.264.
+Huffmanovo kódování je stále o ~2 % výkonnější.
+
+Implementoval a otestoval jsem kontextové modely z doporučení ITU-T T.81 a rozšířil je do 4D.
+Oproti kontextovým modelům z metody H.264 jsem naměřil mírné zhoršení kompresního výkonu.
+Kontextové modely obou metod fungují dobře pro kompresi ve 2D s bloky 8x8, kde dokáží srazit bitrate až o 10 % při stejné kvalitě.
+Kontextové modely se stávají méně efektivní oproti Huffmanovu kódování s rostoucí velikostí bloku a s rostoucím počtem rozměrů.
+Pro vhodnou modifikaci kontextových modelů budu muset reverzně zjistit proč a jak byly tyto modely navrženy pro bloky 8x8 a stejný proces zopakovat pro bloky s obecnými rozměry.
+
+Zkoušel jsem experimentovat s kontextovými modely, měřit různé druhy statistik a hledat optimální nastavení pro 4D metodu.
+Bohužel bez nějakého zajímavého výsledku.
+Vracím se k doporučení ITU-T T.81, kde implementuju doporučené schéma kódování DCT koeficientů aritmetickým kodérem v metodě JPEG.
+
+Věnoval jsem se modelování kontextů a hledání zákonitostí, kterých je možno pro kompresi využít.
+Aktuálně je dosaženo o 5 - 9 % menšího bitrate oproti Huffmanovu kódování v závislosti na požadované kvalitě, přičemž větší redukce je dosaženo pro lepší kvalitu.
+
+Zkoušel jsem různé metody binarizace absolutních hodnot DCT koeficientů.
+Nejlepších výsledků dosahuje Unární kódování, avšak při vyšších datových tocích ztrácí na efektivitě.
+Začal jsem proto s analýzou pravděpodobnostních rozložení pro každou frekvenci v bloku s cílem frekvence lépe seskupovat a pro každou skupinu volit vhodnější binarizační schéma.
+
+Pokračuju studiem chování kvantizovaných DCT koeficientů ve 4D.
+
+Navrhl jsem výběr kontextů v závislosti na tom, jestli se kóduje část bloku, kde převažují nulové koeficienty, nebo nenulové koeficienty.
+Hraniční hodnota je aktuálně nastavena na polovinu bloku s tím, že ji do budoucna udělám adaptivní.
+Toto schéma aktuálně produkuje o ~9 % menší bitrate oproti Huffmanovu kódování při PSNR > 38 dB pro obrázky z Lytra.
+
+Implementoval jsem nástroje, které v DCT koeficientech hledají redundance, kterých by bylo možné využít při kontextovém modelování.
+
+Navrhl a implementoval jsem CABAC kontexty do knihovny liblfif.
+Komprese je nyní svižnější a komprese dosahuje redukce bitrate o 10 až 20 % oproti Huffmanovu kódování při stejné kvalitě.
+
+Začal jsem s návrhem a implementací intra predikce pro 4D bloky.
+
+Plně jsem integroval CABAC do knihovny liblfif a nástrojů.
+Podařilo se mi odladit některé chyby, které zbytečně zvyšovaly bitrate.
+Prováděl jsem podrobnější vyhodnocení na obrázcích z Lytra a z projektu SAUCE.
+Bitrate je v aktuální verzi redukován o 10 - 20 % oproti Huffmanovu kódování.
+
+Začal jsem s převodem prototypu aktuálně nejlepšího navrženého schéma pro CABAC do knihovny liblfif a nástrojů.
+Den jsem strávil zjednodušováním původního prototypu a laděním.
+
+Zjistil jsem, že hodnoty koeficientů jednotlivých frekvencí se řídí Laplaceovým rozdělením.
+Zkoušel jsem koeficienty převést na exponenciální rozdělení a binarizovat Golombovým kódem s parametrem zvoleným podle dosavadního naměřeného rozptylu, ale vedlo to na komplikované řešení s velkou časovou a paměťovou složitostí, přičemž výsledky se lišily jen minimálně.
+Také jsem zkoušel podle rozptylu seskupovat koeficienty, což téměř odpovídalo seskupení podle vzdálenosti od DC koeficientu.
+
+Seznamoval jsem se s intra predikcí užívanou pro kódování videa.
+Studoval jsem cizí implementace a na základě nich jsem zkoušel imeplementovat prototyp, kterž bude podobnou predikci využívat pro kompresi vícedimenzionálních bloků.
+Některé základní módy predikce jsou funkční, avšak jejich implementace je krkolomná a špatně škálovatelná.
+Zaměřil jsem se proto na lepší návrh a co nejvíce parametrizovatelnou implementaci.
+
+Zkoušel jsem si vizualizovat různé módy úhlové predikce v H.264 a hledat v tom systém, který by byl snadno rozšířitelný.
+Poznatky z dnešní práce využiju v příštím týdnu, kdy budu nalezený systém implementovat.
+
+Pendluju mezi návrhem implementace a testováním dosavadních módů predikce.
+Zatím se mi nedaří přijít na to, jak to udělat efektivní a zároveň škálovatelné do více dimenzí a s různou velikostí bloku.
+Z jiných implementací nejde moc vycházet, protože je to většinou pro pevné velikosti bloku.
+Aktuálně implementované módy predikce zvolené podle nejmenší hodnoty SAE samy o sobě redukují bitrate, ale zatím jsem se nezabýval kódováním použitého módu do bitstreamu, takže je možné, že se tím úspora vyrovná.
+Použití jednoho módu predikce pro celý obrázek na redukci bitrate nevede.
+Průběžné testování a ladění je znepříjemňováno nárustem doby komprese z důvodu potřeby bloky průběžně dekódovat.
+
+Studium dokumentů týkajících se komprese a implementace módů predikce tak, aby byly použitelné na bloky o libovolném počtu rozměrů.
+
+Pokračuju v implementaci predikcí ve 2D, 3D, 4D.
+
+Zkoušel jsem implementace různých módů intra predikce s bloky různých velikostí a s různým počtem dimenzí.
+
+Rozšíření intra predikce do 4D se navzdory mého očekávání ukázalo jako velmi netriviální úloha.
+Všiml jsem si, že intra predikce v HEVC jsou o něco obecnější a zároveň jednodušší, než predikce v AVC, které jsou implementovány "napevno".
+Rozhodl jsem se proto přejít na predikci v HEVC a navrhnout rozšíření podle ní.
+
+Podle algoritmu popsaného v H.265 jsem začal implementovat rozšíření do 3D a 4D.
+
+Od H.264, které nevedlo na žádný užitečný výsledek, jsem se přesunul ke studiu intra predikce v HEVC.
+Podle všeho to vypadá, že je zde intra predikce řešena mnohem obecněji, tedy bude snáze rozšířitelná.
+
+Jelikož byla AVC predikce příliš specifická, zaměřil jsem se na predikce prováděné v HEVC.
+V Týdnu jsem se snažil algoritmus rozšířit do více dimenzí a implementovat.
+
+Promítání sousedů do jednoho hlavního je funkční pro libovolný počet dimenzí.
+Jde sice o naivní algoritmus, ale pro účely testování bude snad stačit.
+Dalším krokem bude podle hlavního souseda a směrového vektoru vyplnit vzorky v samotném predikovaném bloku.
+
+Nakonec jsem se tím prokousal a promítání sousedů implementoval.
+
+Začínám se ztrácet ve vlastním kódu, stále nejsem s to vymyslet vhodný algoritmus pro 4D projekci 3D sousedů.
+Musím přijít na nějaký alternativný přístup, jinak se nikam nepohnu.
+
+Stále jsem se zabýval projekcí sousedů.
+
+Částečně jsem implementoval algoritmus pro obecnou predikci podle směrového vektoru, který vychází z referenční imeplementace HEVC (HEVC Test Model).
+Největší problém je s projekci n (n-1)-dimenzionálních sousedů do jednoho, ze kterého jsou vzroky v bloku predikovány.
+
+Dokončil jsem algoritmu pro směrovou intra predikci, kterou jsem z části integroval do nástrojů.
+Podařilo se mi odladit některé chyby, ale při predikci ve 4D stále dochází k neoprávněnému přístupu do paměti, který se mi nedaří vystopovat.
+
+Částečně jsem vyřešil problém s neoprávněným přístupem do paměti, predikce funguje pro 2D a 3D, pro 4D to stále padá.
+
+Ladil jsem algoritmus pro n-dimezionální predikci, některé části jsem refaktoroval a zdokonalil jsem zaokrouhlování.
+Skončil jsem při řešení problému, kdy v krajních případech docházelo k přístupu do paměti mimo vyhrazené vzorky dekódovaného obrázku.
+
+Dokončil jsem návrh a implementaci algoritmu pro směrovou intra predikci podle n-dimenzionálního vektoru.
+Algoritmu chybí nějaké mechanismy pro minimalizaci chyby a postradá také (n - 1)-dimenzionální interpolaci mezi 2^(n - 1) vzorky, ale pro účely testování bude snad stačit.
+Jelikož mi tahle část zabrala víc času, než jsem původně předpokládal, budu se snažit integrovat algoritmus do kompresního řetězce co nejrychleji.
+
+Dokončil jsem implementaci predikčního enginu, který jsem integroval do kompresního řetězce a provedl pár experimentů.
+Z těch vyplývá, že predikce je při kompresi běžných light fieldů spíše ztrátová.
+Byl pozorován pozitivní vliv při porovnání při menší velikosti bloku (4), avšak komprese bez predikce s velikostí bloku odpovídající počtu pohledů je stále efektivnější.
+
+Ke směrové predikci jsem implementoval DC predikci a planární predikci.
+Bitrate se s těmito úpravami zmenšil asi o deset procent, avšak pro bloky velikosti 8, které odpovídají počtu pohledů, je predikce stále o 16 % ztrátová.
+Zkoušel jsem provés stejný experiment s bloky o velikosti 4.
+V tomto případě došlo k celkové redukci bitrate o 6 % oproti kompresi bez predikce.
+To může nasvědčovat tomu, že pro efektivní predikci nejsou velké bloky vhodné a pravděpodobně ji do budoucna bude potřeba kombinovat s dělením do stromové struktury.
+
+Implementoval jsem interpolaci predikovaných vzorků namísto zaokrouhlování.
+Dle očekávání se kompresní poměr o pár procent zlepšil, ovšem predikce je stále v mínusu.
+Podobně jako v H.265 zkusím aplikovat low-pass filtr na sousední vzorky, ze kterých se predikuje, což by mohlo mít pozitivní vliv.
+
+Testoval jsem vliv predikce na kompresní výkon.
+Pro bloky o velikosti 8 je kompresní poměr o ~28% horší oproti kompresi bez predikce.
+Když redukuju velikost bloku na 4, kompresní poměr je o 3% lepší než při kompresi bez predikce, avšak stále mnohem horší než komprese bez predikce s velikostí bloku 8.
+Následující den se zaměřím na zlepšení přesnosti predikce a zavedu interpolaci mezi vzorky namísto zaokrouhlování, což by mělo redukovat vysoké frekvence v predikovaných blocích.
+
+Po zdlouhavém ladění se mi podařilo chybu odhalit a odstranit. V aktuální konfiguraci je predikční engine připraven na fázi aplikace do kompresního řetězce tak, aby měl pozitivní vliv na kompresi.
+
+Navázal jsem na ladění predikčního enginu pro vícedimenzonální bloky.
+Predikci se mi podařilo zprovoznit a zapojit do kompresního řetězce, avšak stále čelím chybě, která se projevuje vadnou predikcí v některých specifických směrech predikce.
+
+Testoval jsem vliv posunu pohledů na kompresní výkon.
+Podle výsledků má smysl nástroj tiler použit na light fieldy, které nemají zachycené pohledy zaostřeny doprostřed scény.
+Posun pohledů má velmi pozitivní vliv na 4D kompresi obrázků z datasetu SAUCE, naopak pro obrázky z Lytra nepřináší žádné zlepšení.
+Na kompresi pomocí HEVC má posun pohledů spíše negativní vliv.
+Vhodný koeficient posunutí jsem hledal podle nejmenšího SAE mezi pohledy, k tomu jsem použil nástroj lf_psnr.
+
+Rychlý predikční algoritmus jsem integroval do kompresního řetězce.
+To mi umožnilo implementovat nízkopropusťové filtrování vzorků, ze kterých se predikuje.
+Nový algoritmus zkrátil čas komprese zhruba na polovinu.
+Filtrování vzorků redukovalo u obrázku incoming z datasetu SAUCE bitrate na 86% v porovnání s kompresí bez predikce, poprvé tedy zaznamenávám pozitivní vliv predikce na kompresi.
+Nutno podotknout, že čas potřebný pro kompresi s predikcí je stále asi třicetinásobný oproti kompresi bez predikce, jelikož je výběr predikčního módu implementován prostým zkoušením různých variant.
+Taky bych rád zmínil, že pro obrázky z Lytra má predikce stále negativní vliv, pravděpodobně za to můžou bloky o velikosti 15, které se používají.
+Ještě mám pár nápadů, jak tu predikci zlepšit, zejména chci algoritmus ještě více zuniverzálnit a nahradit řadu drahých operací za compile-time řešení.
+
+Přepracovávám část predikčního algoritmu tak, aby byl efektivnější a výsledky se daly lépe zpracováváat.
+
+Hledání optimální velikosti bloku
+
+Hledal jsem optimální velikosti bloku
+
+Pracoval jsem na implementaci komprese s obecnými hyperkvádry.
+Tato funkcionalita se ukázala jako užitečná.
+Pro každý obrázek byla nalezena optimální vělikost bloku, která zlepšovala kompresní výkon kodeku.
+Hledání optimální velikosti bloku by mohlo být předmětem dalšího zkoumání.
+
+Hledání optimální velikosti bloku
+
+Hledal jsem optimální velikosti bloku
+
+Implementace komprese s obecnými hyperkvádry.
+
+Implementace komprese s obecnými hyperkvádry.
+
+Implementace komprese s obecnými hyperkvádry.
+
+Implementoval jsem vzájemný posun pohledů a hledání jeho optimální hodnoty.
+Vzájemný posun je pouze celočíselný, aby při něm nedocházelo ke ztrátám.
+
+Logickým krokem je implementace CTU.
+To bude zahrnovat refaktorizaci velké části a předělání entropického kódéru, který doteď předpokládal bloky stejné velikosti.
+
+Ačkoliv jsou mé reporty poněkud opožděné, na projektu stále pracuju a mám zájem se dále zapojovat.
+Jen je toho teď hrozně moc a já mám tendence zapomínat věci, které nemají striktní deadline.
+
+Implementace metody, která hledá disparitu mezi pohledy metodou Golden-section search.
+
+Implementace vzájemného posunu pohledů do kodeku.

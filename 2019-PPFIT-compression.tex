@@ -1,0 +1,149 @@
+%\documentclass{PPFIT} % pro psaní v angličtině / for writing in English
+\documentclass[czech]{PPFIT} % pro psaní v češtině / for writing in Czech
+%\documentclass[slovak]{PPFIT} % pro psaní ve slovenštině / for writing in Slovak
+
+\usepackage{subcaption}
+\usepackage[font=small,labelfont=bf,
+   justification=justified,
+   format=plain]{caption}
+
+
+%--------------------------------------------------------
+%--------------------------------------------------------
+%	PŘIZPŮSOBENÍ PDF / PDF CUSTOMIZATION
+%--------------------------------------------------------
+
+\hypersetup{
+	pdftitle={Komprese 4D světelných polí},
+	pdfauthor={Drahomír Dlabaja},
+	pdfkeywords={4D světelné pole, Komprese, Predikce, Disparita}
+}
+
+%--------------------------------------------------------
+%--------------------------------------------------------
+%  PŘEDBĚŽNÁ vs. KONEČNÁ VERZE / REVIEW vs. FINAL VERSION
+%--------------------------------------------------------
+%   NECHTE následující řádek zakomentovaný pro PŘEDBĚŽNÉ VERZE
+%   Pro KONEČNOU VERZI řádek odkomentujte.
+%   LEAVE this line commented out for the REVIEW VERSIONS
+%   UNCOMMENT this line to get the FINAL VERSION
+
+\PPFinalCopy
+
+
+\PPYear{2019/2020}
+
+\ifczechslovak%
+    %--------------------------------------------------------
+    %--------------------------------------------------------
+    %	INFORMACE O ČLÁNKU
+    %--------------------------------------------------------
+
+  \PaperTitle{Komprese 4D světelných polí}
+
+	\Authors{Drahomír Dlabaja*}
+	\affiliation{*%
+	  \href{mailto:xdlaba02@stud.fit.vut.cz}{xdlaba02@stud.fit.vut.cz},
+	  \textit{Fakulta informačních technologií, Vysoké učení technické v~Brně}}
+
+	\Keywords{4D světelné pole --- Komprese --- Predikce -- Disparita}
+
+	\Supplementary{\href{https://github.com/xdlaba02/light-field-image-format}{Veřejný Repozitář}}
+
+    %--------------------------------------------------------
+    %--------------------------------------------------------
+    %	ABSTRAKT
+    %--------------------------------------------------------
+    \Abstract{
+		% intra predikce, obecne hyperkvadry, posun obrázků
+				Tato práce se zabývá zkoumáním pokročilých metod pro kompresi 4D světelných polí na bázi čtyřrozměrných bloků.
+				V~této práci byla navržena čtyřrozměrná směrová intra predikce, která byla implementována ve formě univerzálního modulu.
+				Dále se tato práce věnuje zobecnění existující kompresní metody pro práci s~hyperbloky obecných rozměrů.
+				Práce také implementuje pre-processingovou operaci, která posunuje pohledy světelného pole tak, aby byla minimalizována vzájemná disparita.
+
+				Čtyřrozměrné intra predikce bylo dosaženo rozšířením a~zobecněním metody intra predikce z~doporučení H.265 do více dimenzí.
+				Navržený algoritmus umožňuje libovolně označit dostupné (již zkomprimované) a~nedostupné vzorky pro predikci a~je tak invariantní vůči průchodu a~dělení bloků.
+				Implementovaný modul byl integrován do existujícího kodeku pro 4D světelná pole.
+
+				Zobecnění velikosti kompresních bloků umožnily tuto velikost přizpůsobit povaze dat jak v~prostorové, tak v~úhlové doméně, což mělo výrazný vliv na kompresní poměr.
+				Tato úprava odemyká různé další možnosti, jak data komprimovat.
+				Pomocí této úpravy lze implementovat dělení bloků do stromové struktury a~velikost bloků tak bude možné přizpůsobit lokálním vlastnostem v~obrázku, což by dále mělo zlepšit kompresi.
+
+				Vzájemný posun pohledů byl implementován v~kombinaci s~metodou, která minimalizuje chybu mezi pohledy.
+				Zejména pro obrázky z~pole kamer se ukázalo, že zaostření pohledů na nejobsáhlejší část scény má pozitivní vliv na kompresi.
+
+        Kodek s popsanými modifikacemi překonává state-of-the-art metody pro videokompresi pro obrázky s nižší disparitou (Lytro, Stanford).
+        Pro obrázky s vyšší disparitou (Stanford, SAUCE) metoda překonává state-of-the-art metody při kompresi s kvalitou vyšší než ~43 dB PSNR.
+    }
+\else%
+    %--------------------------------------------------------
+    %--------------------------------------------------------
+    %	INFORMATION ABOUT THE ARTICLE
+    %--------------------------------------------------------
+    \PaperTitle{4D Light Field Compression}
+
+	\Authors{Drahomír Dlabaja*}
+	\affiliation{*%
+		\href{mailto:xdlaba02@stud.fit.vut.cz}{xdlaba02@stud.fit.vut.cz},
+		\textit{Faculty of Information Technology, Brno University of Technology}}
+
+	\Keywords{4D Light Field --- Compression --- Prediction -- Disparity}
+
+	\Supplementary{\href{https://github.com/xdlaba02/light-field-image-format}{Public Repository}}
+
+	%--------------------------------------------------------
+    %--------------------------------------------------------
+    %	ABSTRACT
+    %--------------------------------------------------------
+    \Abstract{}
+\fi
+
+%--------------------------------------------------------
+%--------------------------------------------------------
+%	TEASER
+%--------------------------------------------------------
+%\Teaser{
+%	\TeaserImage{placeholder.pdf}
+%	\TeaserImage{placeholder.pdf}
+%	\TeaserImage{placeholder.pdf}
+%}
+
+%--------------------------------------------------------
+%--------------------------------------------------------
+%--------------------------------------------------------
+%--------------------------------------------------------
+\begin{document}
+\startdocument
+%--------------------------------------------------------
+%--------------------------------------------------------
+%	OBSAH ČLÁNKU / CONTENT OF THE ARTICLE
+%--------------------------------------------------------
+\ifczechslovak
+    \input{2019-PPFIT-compression-text.tex}
+\else
+    \input{2019-PPFIT-compression-text-en.tex}
+\fi
+
+%--------------------------------------------------------
+%--------------------------------------------------------
+%--------------------------------------------------------
+%	LITERATURA
+%--------------------------------------------------------
+%--------------------------------------------------------
+\phantomsection
+\ifczech
+    \bibliographystyle{bib-styles/czplain}
+\fi
+\ifslovak
+    \bibliographystyle{bib-styles/skplain}
+\fi
+\ifenglish
+    \bibliographystyle{bib-styles/enplain}
+\fi
+
+\bibliography{2019-PPFIT-compression-bib}
+
+%--------------------------------------------------------
+%--------------------------------------------------------
+%--------------------------------------------------------
+\end{document}

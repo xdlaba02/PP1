@@ -1,0 +1,42 @@
+Ztrátová komprese plenoptických fotografií (light-fields)
+
+Cílem projektu je implementovat novou metodu pro ztrátovou kompresi 4D light field snímků. Máme implementováno rozšíření metody JPEG do n rozměrů (n-D DCT).
+
+Komprese s 5D-DCT byla otestována na některá plenoptická videa se zajímavými výsledky. Tato metoda by benefitovala z komprese s obecnými hyperkvádry namísto striktní hyperkrychle. Nabízí se srovnání s metodou HEVC aplikovanou různými způsoby na pětirozměrná data.
+
+Byla otestována "predikce" pohledů od prostředního pohledu v kombinaci se 4D kompresí. Tato metoda se však ukázala jako méně efektivní oproti samotné 4D komprese.
+
+Implementoval jsem nástroj, který počítá MSE a MAE v light-fieldu ve čtyřech směrech - uvnitř pohledu(vertikálně, horizontálně) a mezi pohledy (vertikálně, horizontálně). Nástroj dokáže celkem dobře určit, v jakém směru je vhodné na daný light-field aplikovat 2D metodu, 3D metodu nebo videometodu. Nástroj toho moc neříká o tom, která metoda bude pro daný light field nejlepší.
+
+Pro srovnání metod byly implementovány nástroje pro kompresi light-fieldů pomocí HEVC a XVC. Do budoucna bych mohl implementovat i VVC.
+
+Implementovali jsme entropický kodér CABAC. Zkoušeli jsme aplikovat metodu na stejné vstupy jako Huffmanův kodér, rozšířili jsme kontexty z H.264 a ITU-T T.81. Kontexty však byly efektivní pouze pro 2D. Nakonec jsme navrhli výběr kontextů v závislosti na tom, jestli se kóduje část bloku, kde převažují nulové či nenulové koeficienty. Toto řešení se ukázalo jako efektivní při škálování do více roměrů a zároveň redukuje bitrate o 10 - 20 % v porovnání s původním neadaptivním Huffmanovým kódováním.
+
+Zkoušeli jsme vliv posunutí pohledů vůči sobě na kompresi. Snímky, byly vůči sobě posunuty tak, aby mezi nimi bylo minimalizováno MAE. Tento posun měl obecně pozitivní vliv na kompresi. Bitrate byl redukován v závislosti na velikosti daného posunu.
+
+Implementovali jsme intra predikci aktuálních n-rozměrných bloků z okolních bloků. Jde o zobecnění predikce používané v metodě HEVC, lze tedy predikovat na základě libovolného směrového velktoru, planárně nebo DC. Predikce je efektivní pro bloky menších rozměrů.
+
+Dále byla implementována komprese s obecnými hyperkvádry. S tímto nastavením jde hodně experimentovat, zatím byl pro každý obrázek z testovaného datasetu nalezen nejlepší rozměr bloku experimentálně. Rozměry bloku jsou nyní implementovány tak, aby je bylo možné volit dynamicky. Dalším logickým krokem proto je implementace CTU.
+
+Do kodeku byl implementován vzájemný posunu pohledů tak, aby se mezi nimi maximalizovala korelace. Hledání optimální disparity je prováděno metodou bisekce.
+
+Vyřešené úkoly
+
+    Prvním již vyřešeným úkolem byla implementace efektivního entropického kodéru (CABAC).
+    Dalším vyřešeným úkolem je predikce kódovaného bloku z okolních bloků.
+    Komprese s obecnými hyperkvádry namísto striktní hyperkrychle byla implementována. Ukázalo se, že to má pozitivní vliv na kompresi. Přesné rozměry hyperkvádru můžou být předmětem dalšího zkoumání.
+    Komprimovat 4D light field, kde jsou pohledy mezi sebou vzájemně posunuté tak, jak se sčítají nástrojem refocus (zaostřeno na některý objekt), bylo implementováno včetně hledání nejlepšího zaostření.
+
+Řešené úkoly
+
+    Adaptivní rozsekání obrazu namísto fixní mřížky (ve standardu HEVC se tomu říká Coding Tree Unit).
+
+Budoucí možné úkoly
+
+    Využít vhodnější kvantizační matice.
+    Pavel Zemčík navrhuje zkomprimovat nejprve hloubkovou mapu, na základě které se z několika málo zkomprimovaných pohledů predikují ostatní pohledy. Komprimovat se pak bude rozdíl proti této predikci.
+    Využití diskrétní vlnkové transformace.
+
+Repozitář se zdrojovými kódy vytvořených nástrojů se nachází zde:
+
+    https://github.com/xdlaba02/light-field-image-format
